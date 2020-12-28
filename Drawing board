@@ -1,23 +1,73 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QHBoxLayout, QWidget, QPushButton
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QHBoxLayout, QWidget, QPushButton,
+                             QAction, QFileDialog)
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPixmap, QColor
 from PyQt5.QtCore import Qt
+
+class Canvas(QLabel):
+    def __init__(self, size):
+        super().__init__()
+        
+        self.size = size
+        self.setPixmap(QPixmap(*size))
+        self.setFixedSize(*size)
+
+        # 그림판 초기화
+        self.clear_canvas()
+
+    # 그림 그릴 곳을 하얀색으로 칠하기
+    def clear_canvas(self):
+        painter = QPainter(self.pixmap())
+        painter.setBrush(QBrush(QColor(255, 255, 255)))
+        painter.drawRect(-100, -100, self.size[0]+100, self.size[1]+100)
+        painter.end()
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.initUI()
 
-    #UI 디자인
+    # UI 디자인
     def initUI(self):
-        #menubar 만들기
+        # menubar 만들기
         menubar = self.menuBar()
         menubar.setNativeMenuBar(False)
         filemenu = menubar.addMenu('File')
 
+        save_action = QAction('그림 저장하기', self)
+        save_action.setShortcut('Ctrl+S')
+        save_action.triggered.connect(self.save)
+
+        filemenu.addAction(save_action)
+
+        bkmenu = menubar.addMenu('배경 색상')
+        shapemenu = menubar.addMenu('도형')
+        thickmenu = menubar.addMenu('두께')
+        colormenu = menubar.addMenu('색상')
+        erasermenu = menubar.addMenu('지우개')
+
+        # canvas 생성
+        self.Canvas = Canvas((1260, 700))
+        
+        MainWidget = QWidget()
+        layout = QHBoxLayout()
+        layout.addWidget(self.Canvas)
+        MainWidget.setLayout(layout)
+        
+        self.setCentralWidget(MainWidget)
+
         self.setWindowTitle('Drawing Board')
         self.setFixedSize(1280, 720)
+        
         self.show()
+
+    def save(self):
+        fpath, _ = QFileDialog.getSaveFileName(self, 'Save Image', '', "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
+
+        if fpath:
+            self.image.save(fpath)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
