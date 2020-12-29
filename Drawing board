@@ -1,16 +1,22 @@
 import sys
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QHBoxLayout, QWidget, QPushButton,
-                             QAction, QFileDialog)
-from PyQt5.QtGui import QPainter, QPen, QBrush, QPixmap, QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 class Canvas(QLabel):
     def __init__(self, size):
         super().__init__()
         
+        self.initBtn()
+
+        self.pencolor = Qt.black
+
         self.size = size
         self.setPixmap(QPixmap(*size))
         self.setFixedSize(*size)
+
+        self.begin = QPoint()
+        self.end = QPoint()
 
         # 그림판 초기화
         self.clear_canvas()
@@ -21,55 +27,103 @@ class Canvas(QLabel):
         painter.setBrush(QBrush(QColor(255, 255, 255)))
         painter.drawRect(-100, -100, self.size[0]+100, self.size[1]+100)
         painter.end()
+    
+    def initBtn(self):
+        btnPen = QPushButton('pen', self)   # 버튼 텍스트
+        btnPen.resize(50, 50)
+        btnPen.move(20, 20)   # 버튼 위치
+        btnPen.clicked.connect(self.changeEventPen)
+
+        btnRect = QPushButton('사각형', self)   # 버튼 텍스트
+        btnRect.resize(50, 50)
+        btnRect.move(80, 20)   # 버튼 위치
+        btnRect.clicked.connect(self.changeEventRect)
+
+        btnThick = QPushButton('두께', self)   # 버튼 텍스트
+        btnThick.resize(50, 50)
+        btnThick.move(140, 20)   # 버튼 위치
+        btnThick.clicked.connect(self.mouseMoveEvent)
+
+        btnColor = QPushButton('색상', self)   # 버튼 텍스트
+        btnColor.resize(50, 50)
+        btnColor.move(200, 20)   # 버튼 위치
+        btnColor.clicked.connect(self.showColorDlg)
+
+        btnErase = QPushButton('지우개', self)   # 버튼 텍스트
+        btnErase.resize(50, 50)
+        btnErase.move(260, 20)   # 버튼 위치
+        btnErase.clicked.connect(self.mouseMoveEvent)
+
+        btnLoad = QPushButton('불러오기', self)   # 버튼 텍스트
+        btnLoad.resize(70, 50)
+        btnLoad.move(320, 20)   # 버튼 위치
+        btnLoad.clicked.connect(self.mouseMoveEvent)
+
+        btnSave = QPushButton('저장', self)   # 버튼 텍스트
+        btnSave.resize(50, 50)
+        btnSave.move(400, 20)   # 버튼 위치
+        btnSave.clicked.connect(self.mouseMoveEvent)
+
+    def showColorDlg(self):
+
+        # 색상 대화상자 생성      
+        color = QColorDialog.getColor()
+
+        if color.isValid():
+            self.pencolor = color
+            print(color.name())
+       
+    def changeEventPen(self):
+        self.mouseMoveEvent = self.mouseMoveEventPen
+
+    def changeEventRect(self):
+        self.mouseMoveEvent = self.mouseMoveEventRect
+
+    def mouseMoveEvent(self, e):
+        pass
+
+    def mousePressEvent(self, e):
+        self.begin = e.pos()
+        self.update
+
+    # 마우스가 눌린 상태에서 움직이면 발생
+    def mouseMoveEventPen(self, e):
+        painter = QPainter(self.pixmap())
+        painter.setPen(QPen(self.pencolor, 2))
+        painter.drawLine(self.begin, e.pos())
+        self.begin = e.pos()
+        painter.end()
+        
+        # QLabel을 업데이트 해주는 함수
+        self.repaint()
+
+    def mouseMoveEventRect(self, e):
+        qp = QPainter(self)
+        br = QBrush(QColor(100, 10, 10, 40))
+        qp.setBrush(br)
+        qp.drawRect(QRect(self.begin, self.end))
+
+    def LoadImg(self):
+        qPixmapVar = QPixmap()
+        qPixmapVar.load()
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        self.initUI()
-
-    # UI 디자인
-    def initUI(self):
-        # menubar 만들기
-        menubar = self.menuBar()
-        menubar.setNativeMenuBar(False)
-        filemenu = menubar.addMenu('File')
-
-        save_action = QAction('그림 저장하기', self)
-        save_action.setShortcut('Ctrl+S')
-        save_action.triggered.connect(self.save)
-
-        filemenu.addAction(save_action)
-
-        bkmenu = menubar.addMenu('배경 색상')
-        shapemenu = menubar.addMenu('도형')
-        thickmenu = menubar.addMenu('두께')
-        colormenu = menubar.addMenu('색상')
-        erasermenu = menubar.addMenu('지우개')
-
-        # canvas 생성
-        self.Canvas = Canvas((1260, 700))
         
+        self.Canvas = Canvas((1260, 700))
+        self.setFixedSize(1280, 720)
+
         MainWidget = QWidget()
         layout = QHBoxLayout()
         layout.addWidget(self.Canvas)
         MainWidget.setLayout(layout)
         
         self.setCentralWidget(MainWidget)
-
-        self.setWindowTitle('Drawing Board')
-        self.setFixedSize(1280, 720)
-        
         self.show()
 
-    def save(self):
-        fpath, _ = QFileDialog.getSaveFileName(self, 'Save Image', '', "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
-
-        if fpath:
-            self.image.save(fpath)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = MainWindow()
-    sys.exit(app.exec_())
+if __name__ == "__main__":
+    app = QApplication([])
+    w = MainWindow()
+    app.exec_()
