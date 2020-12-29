@@ -16,7 +16,7 @@ class Canvas(QLabel):
         self.pencolor = Qt.black
         self.penbtn = QPushButton('색상', self)
         self.penbtn.resize(50, 50)
-        self.penbtn.move(200, 20)
+        self.penbtn.move(260, 20)
         self.penbtn.clicked.connect(self.showColorDlg)
 
         self.brushcolor = Qt.white
@@ -67,10 +67,10 @@ class Canvas(QLabel):
         btnCircle.move(140, 20)
         btnCircle.clicked.connect(self.BtnClickedCircle)
 
-        btnErase = QPushButton('지우개', self)
-        btnErase.resize(50, 50)
-        btnErase.move(260, 20)
-        btnErase.clicked.connect(self.mouseMoveEvent)
+        btnLine = QPushButton('직선', self)
+        btnLine.resize(50, 50)
+        btnLine.move(200, 20)
+        btnLine.clicked.connect(self.BtnClickedLine)
 
         btnLoad = QPushButton('불러오기', self)
         btnLoad.resize(70, 50)
@@ -82,10 +82,10 @@ class Canvas(QLabel):
         btnSave.move(400, 20)
         btnSave.clicked.connect(self.mouseMoveEvent)
 
-        btnThick = QPushButton('두께', self)
-        btnThick.resize(50, 50)
-        btnThick.move(660, 20)
-        btnThick.clicked.connect(self.mouseMoveEvent)        
+        btnErase = QPushButton('지우개', self)
+        btnErase.resize(50, 50)
+        btnErase.move(660, 20)
+        btnErase.clicked.connect(self.mouseMoveEvent)     
 
         label = QLabel('선굵기', self)
         label.resize(50, 30)
@@ -118,6 +118,9 @@ class Canvas(QLabel):
 
     def BtnClickedCircle(self):
         self.mouseMoveEvent = self.mouseMoveEventCircle
+
+    def BtnClickedLine(self):
+        self.mouseMoveEvent = self.mouseMoveEventLine
 
     def mouseMoveEvent(self, e):
         pass
@@ -161,6 +164,17 @@ class Canvas(QLabel):
         self.repaint()
         self.setPixmap(t_pixmap)
 
+    def mouseMoveEventLine(self, e):
+        self.count = 3
+        t_pixmap = self.pixmap()
+        t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
+        Line = QPainter(self.pixmap())
+        Line.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
+        Line.drawLine(self.begin, e.pos())
+        Line.end()
+        self.repaint()
+        self.setPixmap(t_pixmap)
+
     def mouseReleaseEvent(self, e):
         if self.count == 1:
             Square = QPainter(self.pixmap())
@@ -176,6 +190,13 @@ class Canvas(QLabel):
             Circle.setBrush(QColor(self.brushcolor))
             Circle.drawEllipse(QRect(self.begin, e.pos()))
             Circle.end()
+            self.repaint()
+
+        elif self.count == 3:
+            Line = QPainter(self.pixmap())
+            Line.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
+            Line.drawLine(self.begin, e.pos())
+            Line.end()
             self.repaint()
 
     def LoadImg(self):
