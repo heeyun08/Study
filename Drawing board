@@ -7,6 +7,8 @@ class Canvas(QLabel):
     def __init__(self, size):
         super().__init__()
 
+        self.count = 0
+
         self.size = size
         self.setPixmap(QPixmap(*size))
         self.setFixedSize(*size)
@@ -22,6 +24,12 @@ class Canvas(QLabel):
         self.btnFill.resize(100, 50)
         self.btnFill.move(550, 20)
         self.btnFill.clicked.connect(self.showColorDlg)
+ 
+        self.cb = QComboBox(self)
+        self.cb.move(1220, 50)
+ 
+        for i in range(1, 11):
+            self.cb.addItem(str(i))
 
         self.begin = QPoint()
         self.end = QPoint()
@@ -73,6 +81,15 @@ class Canvas(QLabel):
         btnBkcolor.move(460, 20)
         btnBkcolor.clicked.connect(self.mouseMoveEvent)
 
+        btnThick = QPushButton('두께', self)
+        btnThick.resize(50, 50)
+        btnThick.move(660, 20)
+        btnThick.clicked.connect(self.mouseMoveEvent)        
+
+        label = QLabel('선굵기', self)
+        label.resize(50, 30)
+        label.move(1220, 10)
+
     def showColorDlg(self):
 
         # 색상 대화상자 생성      
@@ -85,7 +102,7 @@ class Canvas(QLabel):
             # print(color.name())
         else:
             self.brushcolor = color
-       
+
     def BtnClickedPen(self):
         self.mouseMoveEvent = self.mouseMoveEventPen
 
@@ -96,7 +113,6 @@ class Canvas(QLabel):
         self.mouseMoveEvent = self.mouseMoveEventCircle
 
     def mouseMoveEvent(self, e):
-        self.count = 10
         pass
 
     def mousePressEvent(self, e):
@@ -106,7 +122,7 @@ class Canvas(QLabel):
     # 마우스가 눌린 상태에서 움직이면 발생
     def mouseMoveEventPen(self, e):
         painter = QPainter(self.pixmap())
-        painter.setPen(QPen(self.pencolor, 2))
+        painter.setPen(QPen(self.pencolor, self.cb.currentIndex()))
         painter.drawLine(self.begin, e.pos())
         self.begin = e.pos()
         painter.end()
@@ -115,11 +131,11 @@ class Canvas(QLabel):
         self.repaint()
 
     def mouseMoveEventRect(self, e):
-        self.count = 0
+        self.count = 1
         t_pixmap = self.pixmap()
         t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
         Square = QPainter(self.pixmap())
-        Square.setPen(QPen(QColor(self.pencolor)))
+        Square.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
         Square.setBrush(QColor(self.brushcolor))
         Square.drawRect(QRect(self.begin, e.pos()))
         Square.end()
@@ -127,11 +143,11 @@ class Canvas(QLabel):
         self.setPixmap(t_pixmap)
 
     def mouseMoveEventCircle(self, e):
-        self.count = 1
+        self.count = 2
         t_pixmap = self.pixmap()
         t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
         Square = QPainter(self.pixmap())
-        Square.setPen(QPen(QColor(self.pencolor)))
+        Square.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
         Square.setBrush(QColor(self.brushcolor))
         Square.drawEllipse(QRect(self.begin, e.pos()))
         Square.end()
@@ -139,24 +155,24 @@ class Canvas(QLabel):
         self.setPixmap(t_pixmap)
 
     def mouseReleaseEvent(self, e):
-        if self.count == 0:
+        if self.count == 1:
             Square = QPainter(self.pixmap())
-            Square.setPen(QPen(QColor(self.pencolor)))
+            Square.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
             Square.setBrush(QColor(self.brushcolor))
             Square.drawRect(QRect(self.begin, e.pos()))
             Square.end()
             self.repaint()
 
-        elif self.count == 1:
+        elif self.count == 2:
             Circle = QPainter(self.pixmap())
-            Circle.setPen(QPen(QColor(self.pencolor)))
+            Circle.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
             Circle.setBrush(QColor(self.brushcolor))
             Circle.drawEllipse(QRect(self.begin, e.pos()))
             Circle.end()
             self.repaint()
 
     def LoadImg(self):
-        fname = QFileDialog.getOpenFileName(self, 'Open file', '')
+        fname, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir.currentPath())
         qPixmapVar = self.pixmap()
         qPixmapVar.load(fname[0])
         self.repaint()
@@ -169,6 +185,7 @@ class MainWindow(QMainWindow):
         self.setFixedSize(1280, 720)
         
         self.setCentralWidget(self.Canvas)
+        self.setWindowTitle('Drawing Board')
         self.show()
 
 if __name__ == "__main__":
