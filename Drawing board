@@ -6,20 +6,29 @@ from PyQt5.QtCore import *
 class Canvas(QLabel):
     def __init__(self, size):
         super().__init__()
-        
-        self.initBtn()
-
-        self.pencolor = Qt.black
 
         self.size = size
         self.setPixmap(QPixmap(*size))
         self.setFixedSize(*size)
+
+        self.pencolor = Qt.black
+        self.penbtn = QPushButton('색상', self)
+        self.penbtn.resize(50, 50)
+        self.penbtn.move(200, 20)
+        self.penbtn.clicked.connect(self.showColorDlg)
+
+        self.brushcolor = Qt.white
+        self.btnFill = QPushButton('도형 채우기', self)
+        self.btnFill.resize(100, 50)
+        self.btnFill.move(550, 20)
+        self.btnFill.clicked.connect(self.showColorDlg)
 
         self.begin = QPoint()
         self.end = QPoint()
 
         # 그림판 초기화
         self.clear_canvas()
+        self.initBtn()
 
     # 그림 그릴 곳을 하얀색으로 칠하기
     def clear_canvas(self):
@@ -29,57 +38,65 @@ class Canvas(QLabel):
         painter.end()
     
     def initBtn(self):
-        btnPen = QPushButton('pen', self)   # 버튼 텍스트
+        btnPen = QPushButton('pen', self)
         btnPen.resize(50, 50)
-        btnPen.move(20, 20)   # 버튼 위치
-        btnPen.clicked.connect(self.changeEventPen)
+        btnPen.move(20, 20)
+        btnPen.clicked.connect(self.BtnClickedPen)
 
-        btnRect = QPushButton('사각형', self)   # 버튼 텍스트
+        btnRect = QPushButton('사각형', self)
         btnRect.resize(50, 50)
-        btnRect.move(80, 20)   # 버튼 위치
-        btnRect.clicked.connect(self.changeEventRect)
+        btnRect.move(80, 20)
+        btnRect.clicked.connect(self.BtnClikcedRect)
 
-        btnThick = QPushButton('두께', self)   # 버튼 텍스트
-        btnThick.resize(50, 50)
-        btnThick.move(140, 20)   # 버튼 위치
-        btnThick.clicked.connect(self.mouseMoveEvent)
+        btnCircle = QPushButton('원', self)
+        btnCircle.resize(50, 50)
+        btnCircle.move(140, 20)
+        btnCircle.clicked.connect(self.BtnClickedCircle)
 
-        btnColor = QPushButton('색상', self)   # 버튼 텍스트
-        btnColor.resize(50, 50)
-        btnColor.move(200, 20)   # 버튼 위치
-        btnColor.clicked.connect(self.showColorDlg)
-
-        btnErase = QPushButton('지우개', self)   # 버튼 텍스트
+        btnErase = QPushButton('지우개', self)
         btnErase.resize(50, 50)
-        btnErase.move(260, 20)   # 버튼 위치
+        btnErase.move(260, 20)
         btnErase.clicked.connect(self.mouseMoveEvent)
 
-        btnLoad = QPushButton('불러오기', self)   # 버튼 텍스트
+        btnLoad = QPushButton('불러오기', self)
         btnLoad.resize(70, 50)
-        btnLoad.move(320, 20)   # 버튼 위치
-        btnLoad.clicked.connect(self.mouseMoveEvent)
+        btnLoad.move(320, 20)
+        btnLoad.clicked.connect(self.LoadImg)
 
-        btnSave = QPushButton('저장', self)   # 버튼 텍스트
+        btnSave = QPushButton('저장', self)
         btnSave.resize(50, 50)
-        btnSave.move(400, 20)   # 버튼 위치
+        btnSave.move(400, 20)
         btnSave.clicked.connect(self.mouseMoveEvent)
+
+        btnBkcolor = QPushButton('배경 색상', self)
+        btnBkcolor.resize(80, 50)
+        btnBkcolor.move(460, 20)
+        btnBkcolor.clicked.connect(self.mouseMoveEvent)
 
     def showColorDlg(self):
 
         # 색상 대화상자 생성      
         color = QColorDialog.getColor()
 
-        if color.isValid():
+        sender = self.sender()
+
+        if sender == self.penbtn and color.isValid():
             self.pencolor = color
-            print(color.name())
+            # print(color.name())
+        else:
+            self.brushcolor = color
        
-    def changeEventPen(self):
+    def BtnClickedPen(self):
         self.mouseMoveEvent = self.mouseMoveEventPen
 
-    def changeEventRect(self):
+    def BtnClikcedRect(self):
         self.mouseMoveEvent = self.mouseMoveEventRect
 
+    def BtnClickedCircle(self):
+        self.mouseMoveEvent = self.mouseMoveEventCircle
+
     def mouseMoveEvent(self, e):
+        self.count = 10
         pass
 
     def mousePressEvent(self, e):
@@ -98,29 +115,60 @@ class Canvas(QLabel):
         self.repaint()
 
     def mouseMoveEventRect(self, e):
-        qp = QPainter(self)
-        br = QBrush(QColor(100, 10, 10, 40))
-        qp.setBrush(br)
-        qp.drawRect(QRect(self.begin, self.end))
+        self.count = 0
+        t_pixmap = self.pixmap()
+        t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
+        Square = QPainter(self.pixmap())
+        Square.setPen(QPen(QColor(self.pencolor)))
+        Square.setBrush(QColor(self.brushcolor))
+        Square.drawRect(QRect(self.begin, e.pos()))
+        Square.end()
+        self.repaint()
+        self.setPixmap(t_pixmap)
+
+    def mouseMoveEventCircle(self, e):
+        self.count = 1
+        t_pixmap = self.pixmap()
+        t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
+        Square = QPainter(self.pixmap())
+        Square.setPen(QPen(QColor(self.pencolor)))
+        Square.setBrush(QColor(self.brushcolor))
+        Square.drawEllipse(QRect(self.begin, e.pos()))
+        Square.end()
+        self.repaint()
+        self.setPixmap(t_pixmap)
+
+    def mouseReleaseEvent(self, e):
+        if self.count == 0:
+            Square = QPainter(self.pixmap())
+            Square.setPen(QPen(QColor(self.pencolor)))
+            Square.setBrush(QColor(self.brushcolor))
+            Square.drawRect(QRect(self.begin, e.pos()))
+            Square.end()
+            self.repaint()
+
+        elif self.count == 1:
+            Circle = QPainter(self.pixmap())
+            Circle.setPen(QPen(QColor(self.pencolor)))
+            Circle.setBrush(QColor(self.brushcolor))
+            Circle.drawEllipse(QRect(self.begin, e.pos()))
+            Circle.end()
+            self.repaint()
 
     def LoadImg(self):
-        qPixmapVar = QPixmap()
-        qPixmapVar.load()
-
+        fname = QFileDialog.getOpenFileName(self, 'Open file', '')
+        qPixmapVar = self.pixmap()
+        qPixmapVar.load(fname[0])
+        self.repaint()
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.Canvas = Canvas((1260, 700))
+        self.Canvas = Canvas((1280, 720))
         self.setFixedSize(1280, 720)
-
-        MainWidget = QWidget()
-        layout = QHBoxLayout()
-        layout.addWidget(self.Canvas)
-        MainWidget.setLayout(layout)
         
-        self.setCentralWidget(MainWidget)
+        self.setCentralWidget(self.Canvas)
         self.show()
 
 if __name__ == "__main__":
