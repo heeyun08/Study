@@ -15,24 +15,29 @@ class Canvas(QLabel):
 
         self.pencolor = Qt.black
         self.penbtn = QPushButton('색상', self)
-        self.penbtn.resize(50, 50)
-        self.penbtn.move(260, 20)
+        self.penbtn.resize(70, 30)
+        self.penbtn.move(280, 0)
+        self.penbtn.setStyleSheet('background:white')
         self.penbtn.clicked.connect(self.showColorDlg)
 
         self.brushcolor = Qt.white
         self.btnFill = QPushButton('도형 채우기', self)
-        self.btnFill.resize(100, 50)
-        self.btnFill.move(550, 20)
+        self.btnFill.resize(100, 30)
+        self.btnFill.move(490, 0)
+        self.btnFill.setStyleSheet('background:white')
         self.btnFill.clicked.connect(self.showColorDlg)
 
         self.bkBrushcolor = Qt.white
         self.btnBkcolor = QPushButton('배경 색상', self)
-        self.btnBkcolor.resize(80, 50)
-        self.btnBkcolor.move(460, 20)
+        self.btnBkcolor.resize(80, 30)
+        self.btnBkcolor.move(590, 0)
+        self.btnBkcolor.setStyleSheet('background:white')
         self.btnBkcolor.clicked.connect(self.showColorDlg)
  
         self.cb = QComboBox(self)
-        self.cb.move(1220, 50)
+        self.cb.resize(70, 30)
+        self.cb.move(1190, 50)
+        self.cb.setStyleSheet('background:white')
  
         for i in range(1, 11):
             self.cb.addItem(str(i))
@@ -53,43 +58,54 @@ class Canvas(QLabel):
     
     def initBtn(self):
         btnPen = QPushButton('pen', self)
-        btnPen.resize(50, 50)
-        btnPen.move(20, 20)
+        btnPen.resize(70, 30)
+        btnPen.move(0, 0)
+        btnPen.setStyleSheet('background:white')
         btnPen.clicked.connect(self.BtnClickedPen)
 
         btnRect = QPushButton('사각형', self)
-        btnRect.resize(50, 50)
-        btnRect.move(80, 20)
+        btnRect.resize(70, 30)
+        btnRect.move(70, 0)
+        btnRect.setStyleSheet('background:white')
         btnRect.clicked.connect(self.BtnClikcedRect)
 
         btnCircle = QPushButton('원', self)
-        btnCircle.resize(50, 50)
-        btnCircle.move(140, 20)
+        btnCircle.resize(70, 30)
+        btnCircle.move(140, 0)
+        btnCircle.setStyleSheet('background:white')
         btnCircle.clicked.connect(self.BtnClickedCircle)
 
         btnLine = QPushButton('직선', self)
-        btnLine.resize(50, 50)
-        btnLine.move(200, 20)
+        btnLine.resize(70, 30)
+        btnLine.move(210, 0)
+        btnLine.setStyleSheet('background:white')
         btnLine.clicked.connect(self.BtnClickedLine)
 
         btnLoad = QPushButton('불러오기', self)
-        btnLoad.resize(70, 50)
-        btnLoad.move(320, 20)
+        btnLoad.resize(70, 30)
+        btnLoad.move(350, 0)
+        btnLoad.setStyleSheet('background:white')
         btnLoad.clicked.connect(self.LoadImg)
 
         btnSave = QPushButton('저장', self)
-        btnSave.resize(50, 50)
-        btnSave.move(400, 20)
-        btnSave.clicked.connect(self.mouseMoveEvent)
+        btnSave.resize(70, 30)
+        btnSave.move(420, 0)
+        btnSave.setStyleSheet('background:white')
+        btnSave.clicked.connect(self.SaveImg)
 
         btnErase = QPushButton('지우개', self)
-        btnErase.resize(50, 50)
-        btnErase.move(660, 20)
+        btnErase.resize(60, 30)
+        btnErase.move(670, 0)
+        btnErase.setStyleSheet('background:white')
         btnErase.clicked.connect(self.mouseMoveEvent)     
 
         label = QLabel('선굵기', self)
-        label.resize(50, 30)
-        label.move(1220, 10)
+        label.resize(70, 30)
+        label.move(1190, 10)
+        font = label.font()
+        font.setBold(True)
+        font.setPointSize(11)
+        label.setFont(font)
 
     def showColorDlg(self):
 
@@ -200,10 +216,14 @@ class Canvas(QLabel):
             self.repaint()
 
     def LoadImg(self):
-        fname, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir.currentPath())
+        fname= QFileDialog.getOpenFileName(self, 'Open file')
         qPixmapVar = self.pixmap()
         qPixmapVar.load(fname[0])
         self.repaint()
+
+    def SaveImg(self):
+        fname = QFileDialog.getSaveFileName(self, 'Save Image', '', "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
+        
 
 class MainWindow(QMainWindow):
     def __init__(self):
