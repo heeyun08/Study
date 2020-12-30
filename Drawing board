@@ -14,8 +14,7 @@ class Canvas(QLabel):
         self.setPixmap(QPixmap(*size))
         self.setFixedSize(*size)
 
-        self.pencolor = Qt.black
-        self.penbtn = QPushButton('색상', self)
+        self.penbtn = QPushButton('선 색상', self)
         self.penbtn.resize(70, 30)
         self.penbtn.move(280, 0)
         self.penbtn.setStyleSheet('background:white')
@@ -24,14 +23,14 @@ class Canvas(QLabel):
         self.brushcolor = Qt.white
         self.btnFill = QPushButton('도형 채우기', self)
         self.btnFill.resize(100, 30)
-        self.btnFill.move(490, 0)
+        self.btnFill.move(430, 0)
         self.btnFill.setStyleSheet('background:white')
         self.btnFill.clicked.connect(self.showColorDlg)
 
         self.bkBrushcolor = Qt.white
         self.btnBkcolor = QPushButton('배경 색상', self)
         self.btnBkcolor.resize(80, 30)
-        self.btnBkcolor.move(590, 0)
+        self.btnBkcolor.move(350, 0)
         self.btnBkcolor.setStyleSheet('background:white')
         self.btnBkcolor.clicked.connect(self.showColorDlg)
  
@@ -60,6 +59,7 @@ class Canvas(QLabel):
         painter.drawRect(-100, -100, self.size[0]+100, self.size[1]+100)
         painter.end()
     
+    # 버튼 생성
     def initBtn(self):
         btnPen = QPushButton('pen', self)
         btnPen.resize(70, 30)
@@ -87,13 +87,13 @@ class Canvas(QLabel):
 
         btnLoad = QPushButton('불러오기', self)
         btnLoad.resize(70, 30)
-        btnLoad.move(350, 0)
+        btnLoad.move(530, 0)
         btnLoad.setStyleSheet('background:white')
         btnLoad.clicked.connect(self.LoadImg)
 
         btnSave = QPushButton('저장', self)
         btnSave.resize(70, 30)
-        btnSave.move(420, 0)
+        btnSave.move(600, 0)
         btnSave.setStyleSheet('background:white')
         btnSave.clicked.connect(self.SaveImg)
 
@@ -118,6 +118,7 @@ class Canvas(QLabel):
         font.setPointSize(10)
         label.setFont(font)
 
+    # 색상 선택
     def showColorDlg(self):
 
         # 색상 대화상자 생성      
@@ -127,7 +128,6 @@ class Canvas(QLabel):
 
         if sender == self.penbtn and color.isValid():
             self.pencolor = color
-            # print(color.name())
 
         elif sender == self.btnBkcolor and color.isValid():
             t_pixmap = self.pixmap()
@@ -139,10 +139,6 @@ class Canvas(QLabel):
 
         else:
             self.brushcolor = color
-
-    def BtnClickedClear(self):
-        self.clear_canvas()
-        self.repaint()
 
     def BtnClickedPen(self):
         self.mouseMoveEvent = self.mouseMoveEventPen
@@ -185,6 +181,7 @@ class Canvas(QLabel):
         eraser.end()
         self.repaint()
 
+    # 사각형 그리기
     def mouseMoveEventRect(self, e):
         self.count = 1
         t_pixmap = self.pixmap()
@@ -197,18 +194,20 @@ class Canvas(QLabel):
         self.repaint()
         self.setPixmap(t_pixmap)
 
+    # 원 그리기
     def mouseMoveEventCircle(self, e):
         self.count = 2
         t_pixmap = self.pixmap()
         t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
-        Square = QPainter(self.pixmap())
-        Square.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
-        Square.setBrush(QColor(self.brushcolor))
-        Square.drawEllipse(QRect(self.begin, e.pos()))
-        Square.end()
+        Circle = QPainter(self.pixmap())
+        Circle.setPen(QPen(QColor(self.pencolor), self.cb.currentIndex()))
+        Circle.setBrush(QColor(self.brushcolor))
+        Circle.drawEllipse(QRect(self.begin, e.pos()))
+        Circle.end()
         self.repaint()
         self.setPixmap(t_pixmap)
 
+    # 직선 그리기
     def mouseMoveEventLine(self, e):
         self.count = 3
         t_pixmap = self.pixmap()
@@ -244,6 +243,12 @@ class Canvas(QLabel):
             Line.end()
             self.repaint()
 
+    # 전체 지우기
+    def BtnClickedClear(self):
+        self.clear_canvas()
+        self.repaint()
+
+    # 이미지 불러오기
     def LoadImg(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file')
 
@@ -255,6 +260,7 @@ class Canvas(QLabel):
 
             self.show()
 
+    # 이미지 저장하기
     def SaveImg(self):
         fname = QFileDialog.getSaveFileName(self, 'Save Image', '', "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
 
