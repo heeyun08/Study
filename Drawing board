@@ -8,6 +8,7 @@ class Canvas(QLabel):
         super().__init__()
 
         self.count = 0
+        self.erasercolor = Qt.white
 
         self.size = size
         self.setPixmap(QPixmap(*size))
@@ -44,6 +45,9 @@ class Canvas(QLabel):
 
         self.begin = QPoint()
         self.end = QPoint()
+
+        self.ImgLabel = QLabel(self)
+        self.ImgLabel.move(0, 50)
 
         # 그림판 초기화
         self.clear_canvas()
@@ -97,14 +101,21 @@ class Canvas(QLabel):
         btnErase.resize(60, 30)
         btnErase.move(670, 0)
         btnErase.setStyleSheet('background:white')
-        btnErase.clicked.connect(self.mouseMoveEvent)     
+        btnErase.clicked.connect(self.BtnClickedEraser)     
+
+        btnClear = QPushButton('전체 지우기', self)
+        btnClear.resize(90, 30)
+        btnClear.move(730, 0)
+        btnClear.setStyleSheet('background:white')
+        btnClear.clicked.connect(self.BtnClickedClear) 
 
         label = QLabel('선굵기', self)
-        label.resize(70, 30)
-        label.move(1190, 10)
+        label.resize(60, 30)
+        label.move(1195, 10)
+        label.setStyleSheet('background:white')
         font = label.font()
         font.setBold(True)
-        font.setPointSize(11)
+        font.setPointSize(10)
         label.setFont(font)
 
     def showColorDlg(self):
@@ -119,12 +130,19 @@ class Canvas(QLabel):
             # print(color.name())
 
         elif sender == self.btnBkcolor and color.isValid():
+            t_pixmap = self.pixmap()
+            t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
+            t_pixmap.fill(color)
             self.bkBrushcolor = color
-            self.brushcolor = color
-            self.clear_canvas()
+            self.erasercolor = color
+            self.setPixmap(t_pixmap)
 
         else:
             self.brushcolor = color
+
+    def BtnClickedClear(self):
+        self.clear_canvas()
+        self.repaint()
 
     def BtnClickedPen(self):
         self.mouseMoveEvent = self.mouseMoveEventPen
@@ -138,6 +156,9 @@ class Canvas(QLabel):
     def BtnClickedLine(self):
         self.mouseMoveEvent = self.mouseMoveEventLine
 
+    def BtnClickedEraser(self):
+        self.mouseMoveEvent = self.mouseMoveEventEraser
+
     def mouseMoveEvent(self, e):
         pass
 
@@ -145,15 +166,23 @@ class Canvas(QLabel):
         self.begin = e.pos()
         self.update
 
-    # 마우스가 눌린 상태에서 움직이면 발생
+    # 곡선 그리기
     def mouseMoveEventPen(self, e):
         painter = QPainter(self.pixmap())
         painter.setPen(QPen(self.pencolor, self.cb.currentIndex()))
         painter.drawLine(self.begin, e.pos())
         self.begin = e.pos()
         painter.end()
-        
-        # QLabel을 업데이트 해주는 함수
+        self.repaint()
+
+    # 지우개
+    def mouseMoveEventEraser(self, e):
+        self.pencolor = self.erasercolor
+        eraser = QPainter(self.pixmap())
+        eraser.setPen(QPen(QColor(self.erasercolor), 10))
+        eraser.drawLine(self.begin, e.pos())
+        self.begin = e.pos()
+        eraser.end()
         self.repaint()
 
     def mouseMoveEventRect(self, e):
@@ -216,14 +245,20 @@ class Canvas(QLabel):
             self.repaint()
 
     def LoadImg(self):
-        fname= QFileDialog.getOpenFileName(self, 'Open file')
-        qPixmapVar = self.pixmap()
-        qPixmapVar.load(fname[0])
-        self.repaint()
+        fname = QFileDialog.getOpenFileName(self, 'Open file')
+
+        if fname[0]:
+            pixmap = QPixmap(fname[0])
+
+            self.ImgLabel.setPixmap(pixmap)
+            self.ImgLabel.resize(pixmap.width(), pixmap.height())
+
+            self.show()
 
     def SaveImg(self):
         fname = QFileDialog.getSaveFileName(self, 'Save Image', '', "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
-        
+
+        self.pixmap().save(fname[0])
 
 class MainWindow(QMainWindow):
     def __init__(self):
