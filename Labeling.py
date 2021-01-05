@@ -78,7 +78,14 @@ class Canvas(QLabel):
             self.dirlabel.setText(fpath)
 
     def BtnClickedPre(self):
-        pass
+        # 이미지 로드 하지 않고 누르면 오류남
+        if self.cnt == -1:
+            self.cnt = len(self.fPixmap) - 1
+
+        self.cnt -= 1
+
+        self.ImgLabel.setPixmap(self.fPixmap[self.cnt])
+
 
     def BtnClickedNext(self):
         self.cnt += 1
