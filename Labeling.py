@@ -155,23 +155,27 @@ class Canvas(QLabel):
 
     # 이전 이미지로 이동
     def BtnClickedPre(self):
-        # 이미지 로드 하지 않고 누르면 오류남
-        if self.cnt < 0:
-            self.cnt = len(self.fPixmap) - 1
+        try:
+            if self.cnt < 0:
+                self.cnt = len(self.fPixmap) - 1
 
-        self.cnt -= 1
+            self.cnt -= 1
 
-        self.ImgLabel.setPixmap(self.fPixmap[self.cnt])
+            self.ImgLabel.setPixmap(self.fPixmap[self.cnt])
+        except:
+            pass
 
     # 다음 이미지로 이동
     def BtnClickedNext(self):
-        self.cnt += 1
+        try:
+            self.cnt += 1
 
-        # 이미지 로드 하지 않고 누르면 오류남
-        if self.cnt == len(self.fPixmap):
-            self.cnt = 0
+            if self.cnt == len(self.fPixmap):
+                self.cnt = 0
 
-        self.ImgLabel.setPixmap(self.fPixmap[self.cnt])
+            self.ImgLabel.setPixmap(self.fPixmap[self.cnt])
+        except:
+            pass
 
     def DogChecked(self):
         self.color = Qt.red
