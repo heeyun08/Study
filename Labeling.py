@@ -16,6 +16,10 @@ class Canvas(QLabel):
         self.begin = QPoint()
         self.color = Qt.black
         self.draw = False
+        self.list = []
+        self.fileList = []
+        self.crdntList = []
+        self.fname = ''
 
     def initUI(self):
         # 이미지 판
@@ -105,24 +109,33 @@ class Canvas(QLabel):
             painter.setPen(QPen(QColor(self.color), 5))
             painter.setFont(QFont('Arial', 15))
             painter.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
+            
+            # 바운딩 박스 좌표 list에 저장
+            left_x, top_y = self.begin.x(), self.begin.y()
+            right_x, bottom_y = e.x() - 35, e.y() - 35
+            self.list = [left_x, top_y, right_x, bottom_y]
 
             if self.num == 1:
                 painter.drawText(self.begin.x(), self.begin.y() - 10, "Dog")
-                painter.end()
-                self.ImgLabel.repaint()
+                self.list.append('Dog')
+                self.crdntList.append(self.list)
 
             elif self.num == 2:
                 painter.drawText(self.begin.x(), self.begin.y() - 10, "Cat")
-                painter.end()
-                self.ImgLabel.repaint()
+                self.list.append('Cat')
+                self.crdntList.append(self.list)
+
+            painter.end()
+            self.ImgLabel.repaint()
 
     # 디렉터리 선택
     def LoadDir(self):
         fpath = QFileDialog.getExistingDirectory(self, 'Open File', '', QFileDialog.ShowDirsOnly)
+        self.fname = fpath
 
         if fpath:
-            fileList = natsort.natsorted(os.listdir(fpath))
-            self.pixmap = [QPixmap(fpath+'/'+img).scaled(690, 590) for img in fileList]
+            self.fileList = natsort.natsorted(os.listdir(fpath))
+            self.pixmap = [QPixmap(fpath+'/'+img).scaled(690, 590) for img in self.fileList]
             self.pixmap[0] = self.pixmap[0].scaled(690,590)
 
             self.ImgLabel.setPixmap(self.pixmap[0])
@@ -133,13 +146,22 @@ class Canvas(QLabel):
             # 디렉터리 경로 출력
             self.dirlabel.setText(fpath)
 
-    # 바운딩 박스 삭제
+    # 바운딩 박스, 레이블 삭제
     def Delete(self):
         pass
 
-    # 저장
+    # 바운딩 박스, 레이블 저장
     def Save(self):
-        pass
+        if len(self.crdntList) > 0:
+            Imgname = self.fileList[self.cnt]
+            Imgname = Imgname.split('.')
+            f = open("{0}/{1}.txt".format(self.fname, Imgname[0]), 'a')
+
+            for i in self.crdntList:
+                f.write(str(i) + '\n')
+
+            f.close()
+            self.crdntList = [] # crdntlist 초기화
 
     # 이전 이미지로 이동
     def BtnClickedPre(self):
