@@ -1,5 +1,5 @@
 import sys, os
-import natsort # 숫자 정렬용 라이브러리
+import natsort  # 숫자 정렬용 라이브러리
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -10,43 +10,30 @@ class Canvas(QLabel):
 
         self.initUI()
 
+        self.cnt = 0                # 이미지 이동에 필요한 변수
+        self.num = 0                # 레이블 구별 번호
+        self.pixmap = QPixmap()
         self.begin = QPoint()
-        self.labelSize = QSize(50, 30)
         self.color = Qt.black
-        self.count = 0
+        self.draw = False
 
-        # 이미지 이동에 필요한 변수
-        self.cnt = 0
-        self.fPixmap = QPixmap()
+    def initUI(self):
+        # 이미지 판
+        label = QLabel(self)
+        label.resize(700, 600)
+        label.move(30, 30)
+        label.setStyleSheet('background:white; border-style:solid; border-width:2px; border-color:black')
 
         # 이미지 레이블
         self.ImgLabel = QLabel(self)
         self.ImgLabel.move(35, 35)
+        self.ImgLabel.setCursor(Qt.CrossCursor)
 
         # 디렉터리 경로 표시 레이블
         self.dirlabel = QLabel(self)
         self.dirlabel.resize(510, 50)
         self.dirlabel.move(150, 650)
         self.dirlabel.setStyleSheet('background:white; border-style:solid; border-width:2px; border-color:black')
-
-        # 레이블 이름
-        self.dogLabel = QLabel('Dog', self.ImgLabel)
-        self.dogLabel.setFont(QFont('Arial', 14))
-        self.dogLabel.setStyleSheet('Color:red')
-        self.dogLabel.resize(0, 0)
-        self.dogLabel.move(50, 50)
-
-        self.catLabel = QLabel('Cat', self.ImgLabel)
-        self.catLabel.setFont(QFont('Arial', 14))
-        self.catLabel.setStyleSheet('Color:blue')
-        self.catLabel.resize(0, 0)
-        self.catLabel.move(50, 50)
-
-    def initUI(self):
-        label = QLabel(self)
-        label.resize(700, 600)
-        label.move(30, 30)
-        label.setStyleSheet('background:white; border-style:solid; border-width:2px; border-color:black')
 
         # 버튼
         dirbtn = QPushButton('디렉터리 선택', self)
@@ -70,66 +57,64 @@ class Canvas(QLabel):
         nextbtn.setShortcut('RIGHT')
 
         # 레이블
-        dog = QRadioButton('Dog', self)
-        dog.move(770, 40)
-        dog.clicked.connect(self.DogChecked)
+        self.dog = QRadioButton('Dog', self)
+        self.dog.move(770, 40)
+        self.dog.clicked.connect(self.Checked)
         
         dogcolor = QLabel(self)
         dogcolor.move(830, 40)
         dogcolor.resize(20,20)
         dogcolor.setStyleSheet('background:red')
 
-        cat = QRadioButton('Cat', self)
-        cat.move(770, 80)
-        cat.clicked.connect(self.CatChecked)
+        self.cat = QRadioButton('Cat', self)
+        self.cat.move(770, 80)
+        self.cat.clicked.connect(self.Checked)
 
         catcolor = QLabel(self)
         catcolor.move(830, 80)
         catcolor.resize(20,20)
         catcolor.setStyleSheet('background:blue')
 
-    def mouseButtonKind(self, buttons):
-        if buttons & Qt.RightButton:
-            pass
-
     def mousePressEvent(self, e):
-        self.begin = e.pos() - QPoint(35, 35)
+        if e.buttons() & Qt.LeftButton:
+            self.draw = True
+            self.begin = e.pos() - QPoint(35, 35)
+            self.ImgLabel.update()
 
-        if self.count == 1:
-            self.dogLabel.setGeometry(QRect(self.begin - QPoint(0, 35), self.labelSize))
-        
-        elif self.count == 2:
-            self.catLabel.setGeometry(QRect(self.begin - QPoint(0, 35), self.labelSize))
-            
-        self.ImgLabel.update()
+        elif e.buttons() & Qt.RightButton:
+            self.Delete()
 
     def mouseMoveEvent(self, e):
         pass
 
     def Box(self, e):
-        t_pixmap = self.ImgLabel.pixmap()
-        t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
-        painter = QPainter(self.ImgLabel.pixmap())
-        painter.setPen(QPen(QColor(self.color), 5))
-        painter.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
-        painter.end()        
-        self.ImgLabel.repaint()
-        self.ImgLabel.setPixmap(t_pixmap)
+        if self.draw:
+            t_pixmap = self.ImgLabel.pixmap()
+            t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
+            painter = QPainter(self.ImgLabel.pixmap())
+            painter.setPen(QPen(QColor(self.color), 5))
+            painter.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
+            painter.end()        
+            self.ImgLabel.repaint()
+            self.ImgLabel.setPixmap(t_pixmap)
 
     def mouseReleaseEvent(self, e):
-        if self.count == 1:
-            Dog = QPainter(self.ImgLabel.pixmap())
-            Dog.setPen(QPen(QColor(self.color), 5))
-            Dog.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
-            Dog.end()            
-            self.ImgLabel.repaint()
+        if self.draw:
+            self.draw = False
+            painter = QPainter(self.ImgLabel.pixmap())
+            painter.setPen(QPen(QColor(self.color), 5))
+            painter.setFont(QFont('Arial', 15))
+            painter.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
 
-        elif self.count == 2:
-            Cat = QPainter(self.ImgLabel.pixmap())
-            Cat.setPen(QPen(QColor(self.color), 5))
-            Cat.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
-            Cat.end()
-            self.ImgLabel.repaint()
+            if self.num == 1:
+                painter.drawText(self.begin.x(), self.begin.y() - 10, "Dog")
+                painter.end()
+                self.ImgLabel.repaint()
+
+            elif self.num == 2:
+                painter.drawText(self.begin.x(), self.begin.y() - 10, "Cat")
+                painter.end()
+                self.ImgLabel.repaint()
 
     # 디렉터리 선택
     def LoadDir(self):
@@ -137,17 +122,20 @@ class Canvas(QLabel):
 
         if fpath:
             fileList = natsort.natsorted(os.listdir(fpath))
-            pixmap = [QPixmap(fpath+'/'+img).scaled(690, 590) for img in fileList]
-            pixmap[0] = pixmap[0].scaled(690,590)
-            self.fPixmap = pixmap
+            self.pixmap = [QPixmap(fpath+'/'+img).scaled(690, 590) for img in fileList]
+            self.pixmap[0] = self.pixmap[0].scaled(690,590)
 
-            self.ImgLabel.setPixmap(pixmap[0])
-            self.ImgLabel.resize(pixmap[0].width(), pixmap[0].height())
+            self.ImgLabel.setPixmap(self.pixmap[0])
+            self.ImgLabel.resize(self.pixmap[0].width(), self.pixmap[0].height())
 
             self.show()
 
             # 디렉터리 경로 출력
             self.dirlabel.setText(fpath)
+
+    # 바운딩 박스 삭제
+    def Delete(self):
+        pass
 
     # 저장
     def Save(self):
@@ -156,36 +144,37 @@ class Canvas(QLabel):
     # 이전 이미지로 이동
     def BtnClickedPre(self):
         try:
+            self.Save()
             if self.cnt < 0:
-                self.cnt = len(self.fPixmap) - 1
+                self.cnt = len(self.pixmap) - 1
 
             self.cnt -= 1
-
-            self.ImgLabel.setPixmap(self.fPixmap[self.cnt])
+            self.ImgLabel.setPixmap(self.pixmap[self.cnt])
         except:
             pass
 
     # 다음 이미지로 이동
     def BtnClickedNext(self):
         try:
+            self.Save()
             self.cnt += 1
 
-            if self.cnt == len(self.fPixmap):
+            if self.cnt == len(self.pixmap):
                 self.cnt = 0
 
-            self.ImgLabel.setPixmap(self.fPixmap[self.cnt])
+            self.ImgLabel.setPixmap(self.pixmap[self.cnt])
         except:
             pass
 
-    def DogChecked(self):
-        self.color = Qt.red
-        self.count = 1
-
-        self.mouseMoveEvent = self.Box
-
-    def CatChecked(self):
-        self.color = Qt.blue
-        self.count = 2
+    # radio 버튼 체크 이벤트 함수
+    def Checked(self):
+        sender = self.sender()
+        if sender == self.dog:
+            self.color = Qt.red
+            self.num = 1
+        elif sender == self.cat:
+            self.color = Qt.blue
+            self.num = 2
 
         self.mouseMoveEvent = self.Box
 
