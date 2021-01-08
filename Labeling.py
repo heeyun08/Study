@@ -18,7 +18,6 @@ class Canvas(QLabel):
         self.draw = False
         self.list = []
         self.fileList = []
-        self.crdntList = []
         self.fname = ''
 
     def initUI(self):
@@ -111,19 +110,17 @@ class Canvas(QLabel):
             painter.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
             
             # 바운딩 박스 좌표 list에 저장
-            left_x, top_y = self.begin.x(), self.begin.y()
+            left_x, top_y = str(self.begin.x()), str(self.begin.y())
             right_x, bottom_y = e.x() - 35, e.y() - 35
-            self.list = [left_x, top_y, right_x, bottom_y]
+            right_x, bottom_y = str(right_x), str(bottom_y)
 
             if self.num == 1:
                 painter.drawText(self.begin.x(), self.begin.y() - 10, "Dog")
-                self.list.append('Dog')
-                self.crdntList.append(self.list)
+                self.list.append([left_x, top_y, right_x, bottom_y, 'Dog'])
 
             elif self.num == 2:
                 painter.drawText(self.begin.x(), self.begin.y() - 10, "Cat")
-                self.list.append('Cat')
-                self.crdntList.append(self.list)
+                self.list.append([left_x, top_y, right_x, bottom_y, 'Cat'])
 
             painter.end()
             self.ImgLabel.repaint()
@@ -152,16 +149,18 @@ class Canvas(QLabel):
 
     # 바운딩 박스, 레이블 저장
     def Save(self):
-        if len(self.crdntList) > 0:
+        if len(self.list) > 0:
             Imgname = self.fileList[self.cnt]
             Imgname = Imgname.split('.')
+            # Imgname = os.path.split(fname)
             f = open("{0}/{1}.txt".format(self.fname, Imgname[0]), 'w')
 
-            for i in self.crdntList:
-                f.write(str(i) + '\n')
+            for i in self.list:
+                tmp = ' '.join(i)
+                f.write(tmp + '\n')
 
             f.close()
-            self.crdntList = [] # crdntlist 초기화
+            self.list = [] # crdntList 초기화
 
     # 이전 이미지로 이동
     def BtnClickedPre(self):
