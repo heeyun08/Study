@@ -155,7 +155,7 @@ class Canvas(QLabel):
         if len(self.crdntList) > 0:
             Imgname = self.fileList[self.cnt]
             Imgname = Imgname.split('.')
-            f = open("{0}/{1}.txt".format(self.fname, Imgname[0]), 'a')
+            f = open("{0}/{1}.txt".format(self.fname, Imgname[0]), 'w')
 
             for i in self.crdntList:
                 f.write(str(i) + '\n')
