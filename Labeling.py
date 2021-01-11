@@ -8,8 +8,10 @@ class Canvas(QLabel):
     def __init__(self, size):
         super().__init__()
 
+        self.initVar()
         self.initUI()
-
+        
+    def initVar(self):
         self.cnt = 0                # 이미지 이동에 필요한 변수
         self.num = 0                # 레이블 구별 번호
         self.pixmap = QPixmap()
@@ -18,18 +20,14 @@ class Canvas(QLabel):
         self.draw = False
         self.list = []
         self.fileList = []
+        self.fileList2 = []
         self.fname = ''
 
     def initUI(self):
-        # 이미지 판
-        label = QLabel(self)
-        label.resize(700, 600)
-        label.move(30, 30)
-        label.setStyleSheet('background:white; border-style:solid; border-width:2px; border-color:black')
 
         # 이미지 레이블
         self.ImgLabel = QLabel(self)
-        self.ImgLabel.move(35, 35)
+        self.ImgLabel.setGeometry(0, 0, 850, 600)
         self.ImgLabel.setCursor(Qt.CrossCursor)
 
         # 디렉터리 경로 표시 레이블
@@ -61,27 +59,19 @@ class Canvas(QLabel):
 
         # 레이블
         self.dog = QRadioButton('Dog', self)
-        self.dog.move(770, 40)
+        self.dog.move(1100, 40)
+        self.dog.setStyleSheet('color:red')
         self.dog.clicked.connect(self.Checked)
-        
-        dogcolor = QLabel(self)
-        dogcolor.move(830, 40)
-        dogcolor.resize(20,20)
-        dogcolor.setStyleSheet('background:red')
 
         self.cat = QRadioButton('Cat', self)
-        self.cat.move(770, 80)
+        self.cat.move(1100, 80)
+        self.cat.setStyleSheet('color:blue')
         self.cat.clicked.connect(self.Checked)
-
-        catcolor = QLabel(self)
-        catcolor.move(830, 80)
-        catcolor.resize(20,20)
-        catcolor.setStyleSheet('background:blue')
 
     def mousePressEvent(self, e):
         if e.buttons() & Qt.LeftButton:
             self.draw = True
-            self.begin = e.pos() - QPoint(35, 35)
+            self.begin = e.pos()
             self.ImgLabel.update()
 
         elif e.buttons() & Qt.RightButton:
@@ -95,8 +85,8 @@ class Canvas(QLabel):
             t_pixmap = self.ImgLabel.pixmap()
             t_pixmap = t_pixmap.copy(0, 0, t_pixmap.width(), t_pixmap.height())
             painter = QPainter(self.ImgLabel.pixmap())
-            painter.setPen(QPen(QColor(self.color), 5))
-            painter.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
+            painter.setPen(QPen(QColor(self.color), 1))
+            painter.drawRect(QRect(self.begin, e.pos()))
             painter.end()        
             self.ImgLabel.repaint()
             self.ImgLabel.setPixmap(t_pixmap)
@@ -105,9 +95,9 @@ class Canvas(QLabel):
         if self.draw:
             self.draw = False
             painter = QPainter(self.ImgLabel.pixmap())
-            painter.setPen(QPen(QColor(self.color), 5))
+            painter.setPen(QPen(QColor(self.color), 1))
             painter.setFont(QFont('Arial', 15))
-            painter.drawRect(QRect(self.begin, e.pos() - QPoint(35, 35)))
+            painter.drawRect(QRect(self.begin, e.pos()))
             
             # 바운딩 박스 좌표 list에 저장
             left_x, top_y = str(self.begin.x()), str(self.begin.y())
@@ -115,11 +105,11 @@ class Canvas(QLabel):
             right_x, bottom_y = str(right_x), str(bottom_y)
 
             if self.num == 1:
-                painter.drawText(self.begin.x(), self.begin.y() - 10, "Dog")
+                painter.drawText(self.begin.x(), self.begin.y(), "Dog")
                 self.list.append([left_x, top_y, right_x, bottom_y, 'Dog'])
 
             elif self.num == 2:
-                painter.drawText(self.begin.x(), self.begin.y() - 10, "Cat")
+                painter.drawText(self.begin.x(), self.begin.y(), "Cat")
                 self.list.append([left_x, top_y, right_x, bottom_y, 'Cat'])
 
             painter.end()
@@ -132,11 +122,19 @@ class Canvas(QLabel):
 
         if fpath:
             self.fileList = natsort.natsorted(os.listdir(fpath))
-            self.pixmap = [QPixmap(fpath+'/'+img).scaled(690, 590) for img in self.fileList]
-            self.pixmap[0] = self.pixmap[0].scaled(690,590)
+            for i in self.fileList:
+                if 'txt' in i:
+                    self.fileList.remove(i)
+            self.fileList2 = os.listdir(fpath)
 
-            self.ImgLabel.setPixmap(self.pixmap[0])
-            self.ImgLabel.resize(self.pixmap[0].width(), self.pixmap[0].height())
+            self.pixmap = QPixmap(self.ImgLabel.width(), self.ImgLabel.height())
+            self.pixmap.load("{0}/{1}".format(fpath, self.fileList[0]))
+
+            self.ImgLabel.setPixmap(self.pixmap)
+            self.ImgLabel.resize(self.pixmap.width(), self.pixmap.height())
+           
+            if self.fileList[self.cnt].split('.')[0] + '.txt' in self.fileList2:
+                self.LoadBounding(self.fileList[self.cnt].split('.')[0])
 
             self.show()
 
@@ -156,21 +154,51 @@ class Canvas(QLabel):
             f = open("{0}/{1}.txt".format(self.fname, Imgname[0]), 'w')
 
             for i in self.list:
-                tmp = ' '.join(i)
+                tmp = ','.join(i)
                 f.write(tmp + '\n')
 
             f.close()
             self.list = [] # crdntList 초기화
 
+    # 바운딩 박스, 레이블 로드
+    def LoadBounding(self, txtname):
+        list2 = []
+        f = open("{0}/{1}.txt".format(self.fname, txtname), 'r')
+        txt = f.read().split('\n')
+        txt.pop() # 마지막 공백 삭제
+        for i in range(len(txt)):
+            list1 = str(txt[i]).split(',')
+            list2.append(list1)
+        painter = QPainter(self.ImgLabel.pixmap())
+        painter.setFont(QFont('Arial', 15))
+        for i in range(len(list2)):
+            if list2[i][4] == "Dog":
+                painter.setPen(QPen(QColor(Qt.red), 1))
+                painter.drawText(int(list2[i][0]), int(list2[i][1]), 'Dog')
+            else:
+                painter.setPen(QPen(QColor(Qt.blue), 1))
+                painter.drawText(int(list2[i][0]), int(list2[i][1]), 'Cat')
+
+            painter.drawRect(QRect(int(list2[i][0]), int (list2[i][1]),
+                                    int(list2[i][2]) - int(list2[i][0]),
+                                    int(list2[i][3]) - int(list2[i][1])))
+        self.ImgLabel.repaint()
+        f.close()
+
     # 이전 이미지로 이동
     def BtnClickedPre(self):
         try:
             self.Save()
-            if self.cnt < 0:
-                self.cnt = len(self.pixmap) - 1
-
             self.cnt -= 1
-            self.ImgLabel.setPixmap(self.pixmap[self.cnt])
+            if self.cnt < 0:
+                self.cnt = 0
+            else:
+                self.fileList2 = os.listdir(self.fname)
+                self.pixmap.load("{0}/{1}".format(self.fname, self.fileList[self.cnt]))
+                self.ImgLabel.setPixmap(self.pixmap)
+                self.ImgLabel.resize(self.pixmap.width(), self.pixmap.height())
+                if self.fileList[self.cnt].split('.')[0] + '.txt' in self.fileList2:
+                    self.LoadBounding(self.fileList[self.cnt].split('.')[0])
         except:
             pass
 
@@ -180,10 +208,15 @@ class Canvas(QLabel):
             self.Save()
             self.cnt += 1
 
-            if self.cnt == len(self.pixmap):
-                self.cnt = 0
-
-            self.ImgLabel.setPixmap(self.pixmap[self.cnt])
+            if self.cnt == len(self.fileList):
+                self.cnt -= 1
+            else:
+                self.fileList2 = os.listdir(self.fname)
+                self.pixmap.load("{0}/{1}".format(self.fname, self.fileList[self.cnt]))
+                self.ImgLabel.setPixmap(self.pixmap)
+                self.ImgLabel.resize(self.pixmap.width(), self.pixmap.height())
+                if self.fileList[self.cnt].split('.')[0] + '.txt' in self.fileList2:
+                    self.LoadBounding(self.fileList[self.cnt].split('.')[0])
         except:
             pass
 
@@ -203,8 +236,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.Canvas = Canvas((900, 720))
-        self.setFixedSize(900, 720)
+        self.Canvas = Canvas((1200, 720))
+        self.setFixedSize(1200, 720)
         
         self.setCentralWidget(self.Canvas)
         self.setWindowTitle('Labeling program')
