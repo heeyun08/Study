@@ -13,8 +13,8 @@ class Canvas(QLabel):
         
     def initVar(self):
         self.cnt = 0                # 이미지 이동에 필요한 변수
-        self.num = 0                # 레이블 구별 번호
-        self.pixmap = QPixmap()
+        self.type = 0               # 레이블 구별 번호
+        self.pixmap = None
         self.begin = QPoint()
         self.color = Qt.black
         self.draw = False
@@ -27,8 +27,7 @@ class Canvas(QLabel):
 
         # 이미지 레이블
         self.ImgLabel = QLabel(self)
-        self.ImgLabel.setGeometry(0, 0, 850, 600)
-        self.ImgLabel.setCursor(Qt.CrossCursor)
+        self.ImgLabel.setGeometry(0, 0, 1280, 720)
 
         # 디렉터리 경로 표시 레이블
         self.dirlabel = QLabel(self)
@@ -69,10 +68,11 @@ class Canvas(QLabel):
         self.cat.clicked.connect(self.Checked)
 
     def mousePressEvent(self, e):
-        if e.buttons() & Qt.LeftButton:
-            self.draw = True
-            self.begin = e.pos()
-            self.ImgLabel.update()
+        if self.pixmap != None:
+            if e.buttons() & Qt.LeftButton:
+                self.draw = True
+                self.begin = e.pos()
+                self.ImgLabel.update()
 
         elif e.buttons() & Qt.RightButton:
             self.Delete()
@@ -92,7 +92,7 @@ class Canvas(QLabel):
             self.ImgLabel.setPixmap(t_pixmap)
 
     def mouseReleaseEvent(self, e):
-        if self.draw:
+        if self.draw & (self.color != Qt.black):
             self.draw = False
             painter = QPainter(self.ImgLabel.pixmap())
             painter.setPen(QPen(QColor(self.color), 1))
@@ -104,11 +104,11 @@ class Canvas(QLabel):
             right_x, bottom_y = e.x() - 35, e.y() - 35
             right_x, bottom_y = str(right_x), str(bottom_y)
 
-            if self.num == 1:
+            if self.type == 1:
                 painter.drawText(self.begin.x(), self.begin.y(), "Dog")
                 self.list.append([left_x, top_y, right_x, bottom_y, 'Dog'])
 
-            elif self.num == 2:
+            elif self.type == 2:
                 painter.drawText(self.begin.x(), self.begin.y(), "Cat")
                 self.list.append([left_x, top_y, right_x, bottom_y, 'Cat'])
 
@@ -117,20 +117,20 @@ class Canvas(QLabel):
 
     # 디렉터리 선택
     def LoadDir(self):
-        fpath = QFileDialog.getExistingDirectory(self, 'Open File', '', QFileDialog.ShowDirsOnly)
-        self.fname = fpath
+        self.fname = QFileDialog.getExistingDirectory(self, 'Open File', '', QFileDialog.ShowDirsOnly)
 
-        if fpath:
-            self.fileList = natsort.natsorted(os.listdir(fpath))
+        if self.fname:
+            self.fileList = natsort.natsorted(os.listdir(self.fname))
             for i in self.fileList:
                 if 'txt' in i:
                     self.fileList.remove(i)
-            self.fileList2 = os.listdir(fpath)
+            self.fileList2 = os.listdir(self.fname)
 
             self.pixmap = QPixmap(self.ImgLabel.width(), self.ImgLabel.height())
-            self.pixmap.load("{0}/{1}".format(fpath, self.fileList[0]))
+            self.pixmap.load("{0}/{1}".format(self.fname, self.fileList[0]))
 
             self.ImgLabel.setPixmap(self.pixmap)
+            self.ImgLabel.setCursor(Qt.CrossCursor)
             self.ImgLabel.resize(self.pixmap.width(), self.pixmap.height())
            
             if self.fileList[self.cnt].split('.')[0] + '.txt' in self.fileList2:
@@ -139,7 +139,7 @@ class Canvas(QLabel):
             self.show()
 
             # 디렉터리 경로 출력
-            self.dirlabel.setText(fpath)
+            self.dirlabel.setText(self.fname)
 
     # 바운딩 박스, 레이블 삭제
     def Delete(self):
@@ -150,7 +150,6 @@ class Canvas(QLabel):
         if len(self.list) > 0:
             Imgname = self.fileList[self.cnt]
             Imgname = Imgname.split('.')
-            # Imgname = os.path.split(fname)
             f = open("{0}/{1}.txt".format(self.fname, Imgname[0]), 'w')
 
             for i in self.list:
@@ -164,10 +163,10 @@ class Canvas(QLabel):
     def LoadBounding(self, txtname):
         list2 = []
         f = open("{0}/{1}.txt".format(self.fname, txtname), 'r')
-        txt = f.read().split('\n')
-        txt.pop() # 마지막 공백 삭제
-        for i in range(len(txt)):
-            list1 = str(txt[i]).split(',')
+        info = f.read().split('\n')
+        info.pop() # 마지막 공백 삭제
+        for i in range(len(info)):
+            list1 = str(info[i]).split(',')
             list2.append(list1)
         painter = QPainter(self.ImgLabel.pixmap())
         painter.setFont(QFont('Arial', 15))
@@ -222,13 +221,12 @@ class Canvas(QLabel):
 
     # radio 버튼 체크 이벤트 함수
     def Checked(self):
-        sender = self.sender()
-        if sender == self.dog:
+        if self.dog.isChecked():
             self.color = Qt.red
-            self.num = 1
-        elif sender == self.cat:
+            self.type = 1
+        elif self.cat.isChecked():
             self.color = Qt.blue
-            self.num = 2
+            self.type = 2
 
         self.mouseMoveEvent = self.Box
 
