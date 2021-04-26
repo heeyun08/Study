@@ -1,5 +1,5 @@
-## Drawing Board
-그림판
+## Drawing Board.py
+그림판 프로그램
 
 ## Labeling.py
 Labeling Program
