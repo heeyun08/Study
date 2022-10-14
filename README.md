@@ -2,4 +2,4 @@
 그림판 프로그램
 
 ## Labeling.py
-Labeling Program
+Image Labeling Program
